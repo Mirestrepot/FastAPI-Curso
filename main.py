@@ -11,6 +11,7 @@ from pydantic import Field
 #FastAPI
 from fastapi import FastAPI
 from fastapi import Body,Query,Path
+from fastapi import status
 
 app = FastAPI()
 
@@ -67,7 +68,7 @@ class BasePerson(BaseModel):
     
     is_married : Optional[bool]  = Field(default=None)
     
-class PersonCreate(BasePerson):
+class Person(BasePerson):
     password: str = Field(..., min_length=8)
     
     class Config:
@@ -100,20 +101,31 @@ class PersonCreate(BasePerson):
 
     
 
-@app.get('/')
+@app.get(
+    path='/',
+    status_code=status.HTTP_200_OK
+    )
+
 def home():
     return {
         "Hello : World"
     }
 
 #Request and Response Body
-@app.post('/person/new', response_model=BasePerson)
-def create_person(person : PersonCreate = Body()):
+@app.post(
+    path='/person/new',
+    response_model=BasePerson,
+    status_code=status.HTTP_201_CREATED)
+def create_person(person : Person = Body()):
     return person   
 
 
 #Validation: Query Parameters
-@app.get('/person/detail')
+@app.get(
+    path='/person/detail',
+    status_code=status.HTTP_200_OK
+    )
+
 def show_person(
     name : Optional[str] = Query(
         default=None,
@@ -136,7 +148,11 @@ def show_person(
 
 # Validations : Path Paremeter
 
-@app.get("/person/detail/{person_id}")
+@app.get(
+    path="/person/detail/{person_id}",
+    status_code=status.HTTP_200_OK
+    )
+
 def show_person(
 	person_id: int = Path(
     ...,
@@ -146,8 +162,12 @@ def show_person(
 ):
 	return {person_id: "It exist!"}
 
+
 #Validation: Request Body
-@app.put("/person/{person_id}")
+@app.put(
+    path="/person/{person_id}",
+    status_code=status.HTTP_200_OK)
+
 def update_person(
     person_id: int = Path(
         ...,
@@ -156,7 +176,7 @@ def update_person(
         gt=0,
         example=123
     ),
-    person: PersonCreate = Body(...),
+    person: Person = Body(...),
     location: Location = Body(...)
 ): 
     results = person.dict()
