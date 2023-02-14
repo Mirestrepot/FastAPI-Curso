@@ -106,6 +106,8 @@ def home():
 def create_person(person : Person = Body()):
     return person   
 
+
+#Validation: Query Parameters
 @app.get('/person/detail')
 def show_person(
     name : Optional[str] = Query(
@@ -113,21 +115,29 @@ def show_person(
         min_length=1,
         max_length= 50,
         title="Person Name",
-        description="This is the person name. It's betwwen 1 and 50 characters"),
+        description="This is the person name. It's betwwen 1 and 50 characters",
+        example="Rocio"
+        ),
     age :   Optional[str] =Query(
         default=None,
         min_length=1,
         max_length=20,
         title="Person Age",
-        description="This is the person age.It's required")
+        description="This is the person age.It's required",
+        example=25
+        )
+
     ):  return {name:age}
 
 # Validations : Path Paremeter
 
 @app.get("/person/detail/{person_id}")
 def show_person(
-	title: "Person",
-	person_id: int = Path(ge=0)
+	person_id: int = Path(
+    ...,
+    ge=0,
+    example=123
+    )
 ):
 	return {person_id: "It exist!"}
 
@@ -135,9 +145,11 @@ def show_person(
 @app.put("/person/{person_id}")
 def update_person(
     person_id: int = Path(
-        ...,title="Person ID",
+        ...,
+        title="Person ID",
         description="This is the person ID",
-        gt=0
+        gt=0,
+        example=123
     ),
     person: Person = Body(...),
     location: Location = Body(...)
