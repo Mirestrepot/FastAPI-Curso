@@ -48,7 +48,7 @@ class Location(BaseModel):
             }
         }
 
-class Person(BaseModel):
+class BasePerson(BaseModel):
     first_name : str = Field(
         ...,
         min_length=1,
@@ -66,8 +66,12 @@ class Person(BaseModel):
     hair_color : Optional[HairColor] = Field(default=None) 
     
     is_married : Optional[bool]  = Field(default=None)
+    
+class PersonCreate(BasePerson):
+    password: str = Field(..., min_length=8)
+    
     class Config:
-
+        
         schema_extra = {
             "example": {
 
@@ -75,7 +79,8 @@ class Person(BaseModel):
                 "last_name": "Restrepo",
                 "age": 23,
                 "hair_color": "brown",
-                "is_married": False
+                "is_married": False,
+                "password": "contraseña123"
             }
         }
 
@@ -101,9 +106,9 @@ def home():
         "Hello : World"
     }
 
-
-@app.post('/person/new')
-def create_person(person : Person = Body()):
+#Request and Response Body
+@app.post('/person/new', response_model=BasePerson)
+def create_person(person : PersonCreate = Body()):
     return person   
 
 
@@ -151,7 +156,7 @@ def update_person(
         gt=0,
         example=123
     ),
-    person: Person = Body(...),
+    person: PersonCreate = Body(...),
     location: Location = Body(...)
 ): 
     results = person.dict()
