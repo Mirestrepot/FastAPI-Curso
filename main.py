@@ -10,7 +10,7 @@ from pydantic import Field
 
 #FastAPI
 from fastapi import FastAPI
-from fastapi import Body,Query,Path
+from fastapi import Body,Query,Path,Form
 from fastapi import status
 
 app = FastAPI()
@@ -93,7 +93,14 @@ class Person(BasePerson):
         #         "is_married": False
         #     }
         # }
-        
+
+class LoginOut(BaseModel):
+    username: str = Field(
+        ...,
+        max_length=20,
+        example="Miguel0123"
+    )
+    message: str = Field(default="Login Succesfully!")
         
     
 
@@ -182,3 +189,15 @@ def update_person(
     results = person.dict()
     results.update((location.dict()))
     return  results
+
+@app.post(
+    path="/login",
+    response_model=LoginOut,
+    status_code=status.HTTP_200_OK 
+)
+def login(
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    return LoginOut(username=username)
+    
