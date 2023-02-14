@@ -21,26 +21,75 @@ class HairColor(str, Enum):
     black = "black"
     blonde = "blonde"
     red = "red"
+    
 class Location(BaseModel):
-    city: str
-    state: str
-    country: str
+    city: str = Field(
+        ...,
+        min_length=1,
+        max_length=50)
+    
+    state: str = Field(
+        ...,
+        min_length=1,
+        max_length=50)
+    
+    country: str = Field(
+        ...,
+        min_length=1,
+        max_length=50)
+    
+    class Config:
+        schema_extra = {
+            "example": {
+
+                "city": "La Estrella",
+                "state": "Antioquia",
+                "country": "Colombia",
+            }
+        }
 
 class Person(BaseModel):
     first_name : str = Field(
         ...,
         min_length=1,
         max_length=50)
+    
     last_name : str = Field(
         ...,
         min_length=1,
         max_length=50)
+    
     age : int = Field(
         ...,
         gt=0,
         le=115)
     hair_color : Optional[HairColor] = Field(default=None) 
+    
     is_married : Optional[bool]  = Field(default=None)
+    class Config:
+
+        schema_extra = {
+            "example": {
+
+                "first_name": "Miguel",
+                "last_name": "Restrepo",
+                "age": 23,
+                "hair_color": "brown",
+                "is_married": False
+            }
+        }
+
+        #     "example 2": {
+        #         "first_name": "Rodrigo",
+        #         "last_name": "Lopez",
+        #         "age": 30,
+        #         "hair_color": "black",
+        #         "is_married": False
+        #     }
+        # }
+        
+        
+    
 
 
 
