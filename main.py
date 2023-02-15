@@ -4,14 +4,17 @@ from enum import Enum
 
 
 #Pydantic
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import EmailStr
+from pydantic import (
+    BaseModel,
+    Field,
+    EmailStr)
 
 #FastAPI
-from fastapi import FastAPI
-from fastapi import Body,Query,Path,Form,Header,Cookie
-from fastapi import status
+from fastapi import (
+    FastAPI,UploadFile,status,HTTPException,
+    Body,Query,Path,Form,
+    Header,Cookie,File,)
+
 
 app = FastAPI()
 
@@ -103,17 +106,36 @@ class LoginOut(BaseModel):
     message: str = Field(default="Login Succesfully!")
         
     
-
+#Examples
+persons = [1,2,3,4,5]
+user_list = [
+    Person(
+        first_name= "Miguel",
+        last_name= "Restrepo",
+        age= 23,
+        hair_color= "brown",
+        is_married= False,
+        password= "contraseña123"),
+    Person(
+        first_name= "Isa",
+        last_name= "Restrepo",
+        age= 27,
+        hair_color= "brown",
+        is_married= True,
+        password= "password123")
+    
+]
 
 
     
 
 @app.get(
     path='/',
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Home"],
+    summary="Home page"
     )
-
-def home():
+async def home():
     return {
         "Hello : World"
     }
@@ -122,18 +144,29 @@ def home():
 @app.post(
     path='/person/new',
     response_model=BasePerson,
-    status_code=status.HTTP_201_CREATED)
-def create_person(person : Person = Body()):
+    status_code=status.HTTP_201_CREATED,
+    tags=["Persons"],
+    summary="create a new person"
+    )
+async def create_person(person : Person = Body()):
+    """create_person
+    Description: create a new person
+    Parameters: person (Person)
+
+    Returns: person
+    """
     return person   
 
 
 #Validation: Query Parameters
 @app.get(
     path='/person/detail',
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"],
+    summary= "Show a person detail (name,age)",
+    deprecated=True
     )
-
-def show_person(
+async def show_person(
     name : Optional[str] = Query(
         default=None,
         min_length=1,
@@ -150,32 +183,49 @@ def show_person(
         description="This is the person age.It's required",
         example=25
         )
-
-    ):  return {name:age}
+    ):
+    """Show person
+    Parameters: name,age
+    Description: Show person and age
+    Returns:
+        name,age
+    """
+    return {name:age}
 
 # Validations : Path Paremeter
 
 @app.get(
     path="/person/detail/{person_id}",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"],
+    summary="Show person"
     )
-
-def show_person(
+async def show_person(
 	person_id: int = Path(
         ...,
         ge=0,
         example=123
     )
-):
-	return {person_id: "It exist!"}
+):  
+    if person_id not in persons:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="¡This person doesn't exist"
+        )
+    """show_person
+    Parameters: person_id
+    Description: Show id of person
+    Returns:ID person  
+    """
+    return {person_id: "It exist!"}
 
 
 #Validation: Request Body
 @app.put(
     path="/person/{person_id}",
-    status_code=status.HTTP_200_OK)
-
-def update_person(
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"])
+async def update_person(
     person_id: int = Path(
         ...,
         title="Person ID",
@@ -194,9 +244,10 @@ def update_person(
 @app.post(
     path="/login",
     response_model=LoginOut,
-    status_code=status.HTTP_200_OK 
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
 )
-def login(
+async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
@@ -205,9 +256,10 @@ def login(
 #Cookies and Headers Parameters
 @app.post(
     path="/contact",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Forms"]
 )
-def contact(
+async def contact(
     first_name: str = Form(
         ...,
         max_length=20,
@@ -225,4 +277,19 @@ def contact(
     ),
     user_agent: Optional[str] = Header(default=None),
     ads: Optional[str] = Cookie(default=None)
-):return user_agent
+):
+    return user_agent
+
+@app.post(
+    path="/post-image",
+    status_code=status.HTTP_200_OK,
+    tags=["Files"]
+)
+async def post_image(
+    image: UploadFile = File(...)
+):
+    return{
+        "Filename": image.filename,
+        "Format": image.content_type,
+        "Size(kb)": round(len(image.file.read())/1024, ndigits=2),
+    }
